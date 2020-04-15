@@ -15,7 +15,7 @@ type IMessage interface{
 	//设置消息Id
 	SetMsgId(uint32)
 	//设置消息长度
-	SetDataLen(uint32)
+	SetMsgLen(uint32)
 	//设置消息内容
 	SetData([]byte)
 }
