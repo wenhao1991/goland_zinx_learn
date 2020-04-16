@@ -2,8 +2,9 @@ package Znet
 
 import (
 	"awesomeProject/Zinx/Ziface"
-	"awesomeProject/Zinx/utils"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 )
 /*
@@ -46,21 +47,45 @@ func(c *Connection) StartReader(){
 
 	for {
 		// 读取客户端的数据到buf中， 最大utils.GlobalObject.MaxPackageSize字节
-		buf := make([]byte, utils.GlobalObject.MaxPackageSize)
-		_, err := c.Conn.Read(buf)
-		if err != nil{
-			fmt.Println("recv buf err", err)
-			continue
-		}
+		//buf := make([]byte, utils.GlobalObject.MaxPackageSize)
+		//_, err := c.Conn.Read(buf)
+		//if err != nil{
+		//	fmt.Println("recv buf err", err)
+		//	continue
+		//}
+		// create a pack instance
+		dp := NewDataPack()
 
+		// read head
+		headData := make([]byte, dp.GetHeadLen())
+		if _, err :=io.ReadFull(c.GetTCPConnection(), headData); err != nil{
+			fmt.Println("read head err:", err)
+			break
+		}
+		// get msgId and  msg Datalen, put in msg
+		msg, err := dp.Unpack(headData)
+		if err != nil{
+			fmt.Println("unpack err:", err)
+			break
+		}
+		// get data upon Datalen, pu in msg
+		var data []byte
+		if msg.GetMsgLen() > 0{
+			data = make([]byte, msg.GetMsgLen())
+			if _, err := io.ReadFull(c.GetTCPConnection(), data); err!=nil{
+				fmt.Println("read msg, data err", err)
+				break
+			}
+		}
+		msg.SetData(data)
 		//得到当前的conn数据的Request的请求数据
-		req := Request{conn:c, data:buf}
+		req := Request{conn:c, msg:msg}
 
 		//从路由中，找到注册绑定的Conn对应的router调用
 		go func(request Ziface.IRequest){
-			c.Router.PreHandle(req)
-			c.Router.Handle(req)
-			c.Router.PosHandle(req)
+			c.Router.PreHandle(request)
+			c.Router.Handle(request)
+			c.Router.PosHandle(request)
 		}(&req)
 
 		////调用当前链接所绑定的HandleAPI
@@ -103,6 +128,21 @@ func (c *Connection) RemoteAddr() net.Addr{
 	return c.Conn.RemoteAddr()
 }
 //发送数据给客户端
-func (c *Connection) Send(data []byte) error{
+func (c *Connection) SendMsg(msgId uint32, data []byte) error{
+	if c.isClosed == true{
+		return errors.New("Connection is close when send msg")
+	}
+	// pack data
+	dp := NewDataPack()
+	binaryMsg, err :=dp.Pack(NewMessage(msgId, data))
+	if err != nil{
+		fmt.Println("Pack error msg id = ", msgId)
+		return errors.New("Pack error msg")
+	}
+	if _, err :=c.Conn.Write(binaryMsg); err!=nil{
+		fmt.Println("Write msg id = ", msgId, " err:", err)
+		return errors.New("Write msg msg")
+	}
+
 	return nil
 }
