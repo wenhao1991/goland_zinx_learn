@@ -43,7 +43,7 @@ var GlobalObject *GlobalObj
 func (g *GlobalObj) Reload(){
 	dir,_ := os.Getwd()
 	fmt.Printf("cur dir: %s\n", dir)
-	data, err := ioutil.ReadFile("src/awesomeProject/Demo/ZinxV0.1/conf/zinx.json")
+	data, err := ioutil.ReadFile("conf/zinx.json")
 	if err != nil{
 		panic(err)
 	}
@@ -62,11 +62,11 @@ func init(){
 	// 如果配置文件没有加载， 默认值
 	GlobalObject = &GlobalObj{
 		Host:           "0.0.0.0",
-		TcpPort:        8843,
+		TcpPort:        8433,
 		Name:           "ZinxServerApp",
-		Version:        "V0.4",
+		Version:        "V0.5",
 		MaxConn:        1000,
 		MaxPackageSize: 4096,
 	}
-	//GlobalObject.Reload()
+	GlobalObject.Reload()
 }

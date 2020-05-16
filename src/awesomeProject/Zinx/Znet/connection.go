@@ -141,7 +141,7 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error{
 	}
 	if _, err :=c.Conn.Write(binaryMsg); err!=nil{
 		fmt.Println("Write msg id = ", msgId, " err:", err)
-		return errors.New("Write msg msg")
+		return errors.New("Write msg err")
 	}
 
 	return nil

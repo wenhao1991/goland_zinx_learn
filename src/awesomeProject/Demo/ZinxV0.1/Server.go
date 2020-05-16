@@ -18,7 +18,7 @@ type PingRouter struct {
 // Test PreHandle
 func (this *PingRouter)PreHandle(request Ziface.IRequest){
 	fmt.Println("Call Router PreHandle...")
-	_, err :=request.GetConnection().GetTCPConnection().Write([]byte("before ping...\n"))
+	err :=request.GetConnection().SendMsg(1, []byte("before ping...\n"))
 	if err != nil{
 		fmt.Println("call back before ping error")
 	}
@@ -26,16 +26,19 @@ func (this *PingRouter)PreHandle(request Ziface.IRequest){
 // Test Handle
 func (this *PingRouter)Handle(request Ziface.IRequest){
 	fmt.Println("Call Router Handle...")
-	_, err :=request.GetConnection().GetTCPConnection().Write([]byte("ping...ping...ping\n"))
+	// read client data, then ping... ping...ping...
+	fmt.Println("recv from client: msgId=", request.GetMsgID(),
+		", data =", string(request.GetData()))
+	err := request.GetConnection().SendMsg(1, []byte("ping...ping...ping\n"))
 	if err != nil{
-		fmt.Println("call back ping...ping error")
+		fmt.Println(err)
 	}
 }
 
 // Test PostHandle
 func (this *PingRouter)PosHandle(request Ziface.IRequest){
 	fmt.Println("Call Router PosHandle...")
-	_, err :=request.GetConnection().GetTCPConnection().Write([]byte("after ping...\n"))
+	err :=request.GetConnection().SendMsg(1, []byte("after ping...\n"))
 	if err != nil{
 		fmt.Println("call back afterping error")
 	}
