@@ -24,7 +24,7 @@ func main()  {
 	for{
 		// send packed message, MsgId: 0
 		dp := Znet.NewDataPack()
-		binaryMsg, err :=dp.Pack(Znet.NewMessage(0, []byte("ZinxV0.5 client Test Message")))
+		binaryMsg, err :=dp.Pack(Znet.NewMessage(1, []byte("ZinxV0.5 client Test Message")))
 		if err != nil{
 			fmt.Println("Client pack error, exit")
 			return
